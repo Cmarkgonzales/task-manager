@@ -1,1 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+@theme {
+  /* Core brand colors */
+  --color-primary: #2563eb;          /* Strong Blue - main CTA */
+  --color-primary-light: #93c5fd;    /* Soft Blue - backgrounds, hovers */
+  --color-primary-dark: #1e40af;     /* Deep Blue - active states */
+
+  --color-accent: #0ea5e9;           /* Cyan - accent highlights, icons */
+
+  /* Secondary neutrals */
+  --color-secondary: #e0f2fe;        /* Pale Blue - subtle highlights */
+  --color-bg: #f8fafc;               /* App background (very light slate) */
+  --color-bg-card: #ffffff;          /* Card, modal, and input background */
+  --color-surface: #f1f5f9;          /* Surface background layers */
+
+  /* Typography */
+  --color-text: #0f172a;             /* Primary text (dark slate) */
+  --color-text-light: #64748b;       /* Subtle/inactive text (gray slate) */
+  --color-heading: #1e293b;          /* For bold titles or section headings */
+
+  /* Border/Divider */
+  --color-border: #e2e8f0;           /* Light slate border */
+
+  /* Priority/Status Feedback */
+  --color-success: #22c55e;          /* Green (low/completed) */
+  --color-warning: #facc15;          /* Yellow (medium/due soon) */
+  --color-danger: #ef4444;           /* Red (high/overdue/deletion) */
+  --color-info: #38bdf8;             /* Sky Blue (general info) */
+}
+
+
+@layer base {
+    body {
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    button {
+        cursor: pointer;
+    }
+}
+
+@layer components {
+    .form-input {
+        @apply w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-accent placeholder-gray-400;
+    }
+
+    .btn-primary {
+        @apply mt-4 py-2.5 px-4 text-sm sm:text-base font-medium text-white bg-accent hover:bg-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors duration-200 ease-in-out;
+    }
+}

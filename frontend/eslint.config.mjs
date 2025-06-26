@@ -16,7 +16,6 @@ export default [
             'key-spacing': ['error'],
             'keyword-spacing': ['error'],
             'linebreak-style': ['error', 'unix'],
-            'max-len': ['error', { code: 120 }],
             'no-lonely-if': ['error'],
             'no-multi-spaces': ['error'],
             'no-nested-ternary': ['error'],
