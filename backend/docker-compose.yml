@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: task-manager-app
+    container_name: task-manager-app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www
+    depends_on:
+      - db
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+
+  webserver:
+    image: nginx:alpine
+    container_name: task-manager-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - .:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8
+    container_name: task-manager-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: task_manager
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - 3307:3306

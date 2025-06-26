@@ -1,0 +1,15 @@
+**/node_modules/
+**/vendor/
+**/.env
+**/.env.*
+**/storage/
+**/storage/logs/
+**/storage/framework/
+**/storage/*.key
+**/composer.lock
+**/package-lock.json
+**/yarn.lock
+**/.DS_Store
+**/.vscode/
+**/.idea/
+*.log
