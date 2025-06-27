@@ -35,6 +35,11 @@
                         class="space-y-4"
                         @submit.prevent="login"
                     >
+                        <p v-if="loginErrors.general" class="bg-danger-light text-danger text-sm rounded p-2 flex justify-center items-center gap-2">
+                            <Icon name="ExclamationCircle" class="h-4 w-4" />
+                            {{ loginErrors.general }}
+                        </p>
+
                         <InputField
                             v-model="loginForm.email"
                             label="Email"
@@ -43,6 +48,10 @@
                             placeholder="Enter email"
                             required
                         />
+                        <p v-if="loginErrors.email" class="text-danger text-xs pl-1 mt-1">
+                            {{ loginErrors.email }}
+                        </p>
+
                         <InputField
                             v-model="loginForm.password"
                             label="Password"
@@ -53,8 +62,31 @@
                             required
                             @toggle="showLoginPassword = !showLoginPassword"
                         />
-                        <button class="btn-primary w-full">
-                            Sign In
+                        <p v-if="loginErrors.password" class="text-danger text-xs pl-1 mt-1">
+                            {{ loginErrors.password }}
+                        </p>
+                        <button class="btn-primary w-full flex items-center justify-center" :disabled="isNavigating">
+                            <span v-if="!isNavigating">Sign In</span>
+                            <svg
+                                v-else
+                                class="animate-spin h-5 w-5 text-white"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                    fill="none"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16 8 8 0 01-8-8z"
+                                />
+                            </svg>
                         </button>
                     </form>
 
@@ -64,6 +96,11 @@
                         class="space-y-4"
                         @submit.prevent="register"
                     >
+                        <p v-if="registerErrors.general" class="bg-danger-light text-danger text-sm rounded p-2 flex justify-center items-center gap-2">
+                            <Icon name="ExclamationCircle" class="h-4 w-4" />
+                            {{ registerErrors.general }}
+                        </p>
+
                         <InputField
                             v-model="registerForm.name"
                             label="Full Name"
@@ -72,6 +109,10 @@
                             placeholder="Enter full name"
                             required
                         />
+                        <p v-if="registerErrors.name" class="text-danger text-xs pl-1 mt-1">
+                            {{ registerErrors.name }}
+                        </p>
+
                         <InputField
                             v-model="registerForm.email"
                             label="Email"
@@ -80,6 +121,10 @@
                             placeholder="Enter email"
                             required
                         />
+                        <p v-if="registerErrors.email" class="text-danger text-xs pl-1 mt-1">
+                            {{ registerErrors.email }}
+                        </p>
+
                         <InputField
                             v-model="registerForm.password"
                             label="Password"
@@ -91,28 +136,9 @@
                             @toggle="showRegisterPassword = !showRegisterPassword"
                             @input="checkPasswordStrength"
                         />
-                        <div v-if="registerForm.password" class="text-sm">
-                            <div class="h-2 w-full rounded bg-gray-200 overflow-hidden">
-                                <div
-                                    class="h-full transition-all duration-300"
-                                    :class="{
-                                        'bg-danger w-1/3': passwordStrength === 'weak',
-                                        'bg-warning w-2/3': passwordStrength === 'medium',
-                                        'bg-success w-full': passwordStrength === 'strong',
-                                    }"
-                                ></div>
-                            </div>
-                            <p
-                                class="mt-1 text-xs font-medium"
-                                :class="{
-                                    'text-danger': passwordStrength === 'weak',
-                                    'text-warning': passwordStrength === 'medium',
-                                    'text-success': passwordStrength === 'strong',
-                                }"
-                            >
-                                Strength: {{ passwordStrength }}
-                            </p>
-                        </div>
+                        <p v-if="registerErrors.password" class="text-danger text-xs pl-1 mt-1">
+                            {{ registerErrors.password }}
+                        </p>
 
                         <InputField
                             v-model="registerForm.passwordConfirm"
@@ -122,8 +148,34 @@
                             :type="showRegisterPassword ? 'text' : 'password'"
                             required
                         />
-                        <button class="btn-primary w-full">
-                            Register
+                        <p v-if="registerErrors.passwordConfirm" class="text-danger text-xs pl-1 mt-1">
+                            {{ registerErrors.passwordConfirm }}
+                        </p>
+                        <button
+                            class="btn-primary w-full flex items-center justify-center"
+                            :disabled="isNavigating"
+                        >
+                            <span v-if="!isNavigating">Register</span>
+                            <svg
+                                v-else
+                                class="animate-spin h-5 w-5 text-white"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                    fill="none"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16 8 8 0 01-8-8z"
+                                />
+                            </svg>
                         </button>
                     </form>
                 </Transition>
@@ -133,17 +185,37 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue';
+    import { ref, watch } from 'vue';
+    import { useRouter } from 'vue-router';
+    import { useAuthStore } from '@/store/authStore';
     import InputField from '@/components/InputField.vue';
+    const authStore = useAuthStore();
+    const router = useRouter();
 
     const authMode = ref('login');
     const showLoginPassword = ref(false);
     const showRegisterPassword = ref(false);
+    const isNavigating = ref(false);
 
     const loginForm = ref({ email: '', password: '' });
     const registerForm = ref({ name: '', email: '', password: '', passwordConfirm: '' });
 
     const passwordStrength = ref('');
+    const loginErrors = ref({
+        email: '',
+        password: '',
+        general: ''
+    });
+
+    const registerErrors = ref({
+        name: '',
+        email: '',
+        password: '',
+        passwordConfirm: '',
+        general: ''
+    });
+
+    const EMAIL_REG_EX = /^[\w-.]+@[\w-]+\.[\w]{2,}$/;
 
     const checkPasswordStrength = () => {
         const password = registerForm.value.password;
@@ -151,16 +223,105 @@
         const numericRegEx = /[0-9]/;
 
         if (password.length < 6) {
-            passwordStrength.value = 'weak';
+            passwordStrength.value = 'Weak';
         } else if (password.match(alphaRegEx) && password.match(numericRegEx)) {
-            passwordStrength.value = 'strong';
+            passwordStrength.value = 'Strong';
         } else {
-            passwordStrength.value = 'medium';
+            passwordStrength.value = 'Medium';
         }
     };
 
-    const login = () => console.log('Login:', loginForm.value);
-    const register = () => console.log('Register:', registerForm.value);
+    watch(() => loginForm.value.email, () => {
+        loginErrors.value.email = '';
+        loginErrors.value.general = '';
+    });
+
+    watch(() => loginForm.value.password, () => {
+        loginErrors.value.password = '';
+        loginErrors.value.general = '';
+    });
+
+    watch(() => registerForm.value.name, () => {
+        registerErrors.value.name = '';
+        registerErrors.value.general = '';
+    });
+
+    watch(() => registerForm.value.email, () => {
+        registerErrors.value.email = '';
+        registerErrors.value.general = '';
+    });
+
+    watch(() => registerForm.value.password, () => {
+        registerErrors.value.password = '';
+        registerErrors.value.general = '';
+    });
+
+    watch(() => registerForm.value.passwordConfirm, () => {
+        registerErrors.value.passwordConfirm = '';
+        registerErrors.value.general = '';
+    });
+
+    const login = () => {
+        loginErrors.value = { email: '', password: '', general: '' };
+
+        const email = loginForm.value.email.trim();
+        const password = loginForm.value.password.trim();
+
+        if (!EMAIL_REG_EX.test(email)) {
+            loginErrors.value.email = 'Please enter a valid email address.';
+            return;
+        }
+
+        if (password.length < 6) {
+            loginErrors.value.password = 'Password must be at least 6 characters.';
+            return;
+        }
+
+        const result = authStore.login(email, password);
+
+        if (result.success) {
+            router.push('/dashboard');
+        } else {
+            loginErrors.value.general = result.message;
+        }
+    };
+
+    const register = () => {
+        registerErrors.value = { name: '', email: '', password: '', passwordConfirm: '', general: '' };
+
+        const name = registerForm.value.name.trim();
+        const email = registerForm.value.email.trim();
+        const password = registerForm.value.password.trim();
+        const passwordConfirm = registerForm.value.passwordConfirm.trim();
+
+        if (!name || name.length < 2) {
+            registerErrors.value.name = 'Full name is required.';
+            return;
+        }
+
+        if (!EMAIL_REG_EX.test(email)) {
+            registerErrors.value.email = 'Please enter a valid email address.';
+            return;
+        }
+
+        if (password.length < 6) {
+            registerErrors.value.password = 'Password must be at least 6 characters.';
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            registerErrors.value.passwordConfirm = 'Passwords do not match.';
+            return;
+        }
+
+        const result = authStore.register(name, email, password);
+
+        if (result.success) {
+            router.push('/dashboard');
+        } else {
+            registerErrors.value.general = result.message;
+        }
+    };
 </script>
 
 <style scoped>
@@ -169,6 +330,7 @@
         transform: scale(1);
         opacity: 1;
     }
+
     .fade-enter-from, .fade-leave-to {
         opacity: 0;
         transform: translateY(10px) scale(0.95);

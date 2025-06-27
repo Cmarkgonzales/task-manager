@@ -1,3 +1,12 @@
+<template>
+    <component
+        :is="IconComponent"
+        v-if="IconComponent"
+        :class="[customClass ? `${customClass}` : 'w-5 h-5']"
+    />
+    <span v-else class="text-danger text-xs">Icon not found</span>
+</template>
+
 <script setup>
     import { computed } from 'vue';
     import * as SolidIcons from '@solid-icons';
@@ -14,12 +23,3 @@
         return icons[`${props.name}Icon`] || null;
     });
 </script>
-
-<template>
-    <component
-        :is="IconComponent"
-        v-if="IconComponent"
-        :class="[customClass ? `${customClass}` : 'w-5 h-5']"
-    />
-    <span v-else class="text-danger text-xs">Icon not found</span>
-</template>

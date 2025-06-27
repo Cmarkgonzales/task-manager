@@ -1,75 +1,91 @@
 <template>
     <Page>
-        <div id="admin-view" class="animate-fade-in">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate mb-6">
-                Admin Dashboard
-            </h2>
+        <div id="admin-view" class="animate-fade-in space-y-8">
+            <div>
+                <h2 class="text-2xl font-bold text-heading sm:text-3xl mb-2">
+                    Admin Dashboard
+                </h2>
+                <p class="text-sm text-text-light">
+                    Manage users and review assigned tasks.
+                </p>
+            </div>
 
-            <!-- User Management -->
-            <div class="bg-white rounded-lg shadow p-4 mb-8">
-                <div class="mb-4 border-b pb-4">
-                    <h3 class="text-lg font-medium text-gray-900">
+            <div class="bg-white rounded-xl shadow p-6 mb-8 border border-gray-100">
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-text">
                         User Management
                     </h3>
-                    <p class="text-sm text-gray-500">
-                        View and manage all users in the system.
+                    <p class="text-sm text-text-light">
+                        View and manage all users registered in the system.
                     </p>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-border text-sm">
+                        <thead class="bg-gray-50 text-text uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                                    Name
+                                <th class="px-6 py-3 text-left">
+                                    User
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                                <th class="px-6 py-3 text-left">
                                     Email
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                                <th class="px-6 py-3 text-left">
                                     Role
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                                <th class="px-6 py-3 text-left">
                                     Tasks
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                                <th class="px-6 py-3 text-left">
                                     Status
                                 </th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+                                <th class="px-6 py-3 text-right">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-border">
                             <tr
-                                v-for="user in users"
+                                v-for="user in enrichedUsers"
                                 :key="user.id"
                                 class="hover:bg-gray-50 transition"
                             >
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                                    {{ user.name }}
+                                <td class="px-6 py-4 flex items-center gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-9 h-9 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold uppercase"
+                                    >
+                                        {{ user.name.charAt(0) }}
+                                    </div>
+                                    <span class="font-medium text-gray-900">{{ user.name }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-6 py-4 text-text">
                                     {{ user.email }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500 capitalize">
-                                    {{ user.role }}
+                                <td class="px-6 py-4 capitalize">
+                                    <span
+                                        class="inline-flex px-2 py-1 rounded-full text-xs font-medium"
+                                        :class="user.role == 'admin' ? 'bg-violet-100 text-violet-600' : 'bg-primary-light text-primary'"
+                                    >
+                                        {{ user.role }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-6 py-4">
                                     {{ user.tasks.length }}
                                 </td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-6 py-4">
                                     <span
-                                        :class="user.active ? 'text-green-600' : 'text-red-600'"
+                                        class="inline-flex px-2 py-1 rounded-full text-xs font-medium"
+                                        :class="user.active ? 'bg-success-light text-green-800' : 'bg-red-100 text-red-800'"
                                     >
                                         {{ user.active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right text-sm">
+                                <td class="px-6 py-4 text-right">
                                     <button
-                                        class="text-primary hover:text-primary-dark"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium text-accent hover:text-primary transition"
                                         @click="viewUserTasks(user)"
                                     >
+                                        <Icon name="Eye" class="h-4 w-4" />
                                         View Tasks
                                     </button>
                                 </td>
@@ -81,22 +97,22 @@
 
             <div
                 v-if="selectedUser"
-                class="bg-white rounded-lg shadow p-4"
+                class="bg-white rounded-xl shadow p-6 border border-gray-100"
             >
                 <div class="flex justify-between items-center border-b pb-4 mb-4">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">
+                        <h3 class="text-lg font-semibold text-gray-900">
                             Tasks for {{ selectedUser.name }}
                         </h3>
-                        <p class="text-sm text-gray-500">
-                            {{ selectedUser.tasks.length }} tasks assigned
+                        <p class="text-sm text-text-light">
+                            {{ getTaskCountDisplay(selectedUser.tasks.length) }}
                         </p>
                     </div>
                     <button
-                        class="text-text-light p-2 hover:text-text"
+                        class="text-gray-400 hover:text-text"
                         @click="selectedUser = null"
                     >
-                        <Icon name="XMark" custom-class="h-5 w-5" />
+                        <Icon name="XMark" class="h-5 w-5" />
                     </button>
                 </div>
                 <TaskList
@@ -113,36 +129,33 @@
     import Page from '@/components/Page.vue';
     import TaskList from '@/components/TaskList.vue';
     import Icon from '@/components/Icon.vue';
-    import { ref } from 'vue';
+    import { ref, computed } from 'vue';
+    import { useTaskStore } from '@/store/taskStore';
+    import { useAuthStore } from '@/store/authStore';
 
-    // dummy data
-    const users = ref([
-        {
-            id: 1,
-            name: 'Jane Doe',
-            email: 'jane@example.com',
-            role: 'admin',
-            active: true,
-            tasks: [
-                { id: 101, title: 'Review reports', description: 'Quarterly review', priority: 'high', dueDate: '2025-06-30', status: 'pending' },
-                { id: 102, title: 'Approve budget', description: '2025 budget', priority: 'medium', dueDate: '2025-07-15', status: 'completed' }
-            ]
-        },
-        {
-            id: 2,
-            name: 'John Smith',
-            email: 'john@example.com',
-            role: 'user',
-            active: false,
-            tasks: [
-                { id: 103, title: 'Submit timesheet', description: 'May timesheet', priority: 'low', dueDate: '2025-06-28', status: 'pending' }
-            ]
-        }
-    ]);
+    const taskStore = useTaskStore();
+    const authStore = useAuthStore();
+
+    const enrichedUsers = computed(() => {
+        return authStore.fakeUsers.map(user => ({
+            ...user,
+            tasks: user.tasks.map(taskId => taskStore.getTaskById(taskId))
+        }));
+    });
 
     const selectedUser = ref(null);
 
     const viewUserTasks = (user) => {
         selectedUser.value = user;
+    };
+
+    const getTaskCountDisplay = (tasks) => {
+        const count = Number(tasks) || 0;
+
+        if (count === 0) {
+            return 'No tasks assigned';
+        }
+
+        return count === 1 ? '1 task assigned' : `${count} tasks assigned`;
     };
 </script>

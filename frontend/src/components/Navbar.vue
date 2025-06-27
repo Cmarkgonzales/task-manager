@@ -11,7 +11,7 @@
                     <span class="text-xl font-bold text-accent">TaskManager</span>
                 </RouterLink>
 
-                <div class="hidden md:flex items-center space-x-6">
+                <div v-if="isAuthenticated" class="hidden md:flex items-center space-x-6">
                     <RouterLink
                         v-for="link in navLinks"
                         :key="link.name"
@@ -48,7 +48,10 @@
                                     <Icon name="Cog6Tooth" custom-class="w-5 h-5 text-text-light mr-2" />
                                     Settings
                                 </p>
-                                <button class="flex flex-row items-center w-full text-left px-4 py-2 text-sm text-text hover:bg-border">
+                                <button
+                                    class="flex flex-row items-center w-full text-left px-4 py-2 text-sm text-text hover:bg-border"
+                                    @click="logout"
+                                >
                                     <Icon name="ArrowLeftStartOnRectangle" custom-class="w-5 h-5 mr-2" />
                                     Sign out
                                 </button>
@@ -63,7 +66,7 @@
         </div>
 
         <transition name="fade">
-            <div v-if="showMobileMenu" class="md:hidden px-4 pb-4">
+            <div v-if="showMobileMenu && isAuthenticated" class="md:hidden px-4 pb-4">
                 <div class="space-y-2 mt-2">
                     <RouterLink
                         v-for="link in navLinks"
@@ -86,10 +89,13 @@
 
 <script setup>
     import { ref, computed } from 'vue';
-    import { useRoute } from 'vue-router';
+    import { useRoute, useRouter } from 'vue-router';
+    import { useAuthStore } from '@/store/authStore';
     import Icon from './Icon.vue';
 
+    const authStore = useAuthStore();
     const route = useRoute();
+    const router = useRouter();
 
     const navLinks = [
         { name: 'My Tasks', path: '/dashboard' },
@@ -97,12 +103,15 @@
         { name: 'Admin', path: '/admin' }
     ];
 
-    // toggle states
     const showUserMenu = ref(false);
     const showMobileMenu = ref(false);
+    const isActive = (path) => route.path.startsWith(path);
+
+    const userInitial = computed(() => authStore.userInitial);
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
+    const userName = computed(() => authStore.userName);
 
     const toggleUserMenu = () => {
-        console.log('im here at toggle user menu');
         showUserMenu.value = !showUserMenu.value;
     };
 
@@ -111,16 +120,14 @@
     };
 
     const closeUserMenu = () => {
-        console.log('im hereee');
         showUserMenu.value = false;
     };
 
-    // active state
-    const isActive = (path) => route.path.startsWith(path);
-
-    // dynamic user name and initial
-    const userName = 'John Doe';
-    const userInitial = computed(() => userName.charAt(0).toUpperCase());
+    const logout = () => {
+        authStore.logout();
+        showUserMenu.value = false;
+        router.push('/auth');
+    };
 </script>
 
 <style scoped>

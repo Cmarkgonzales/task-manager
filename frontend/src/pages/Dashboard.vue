@@ -2,11 +2,12 @@
     <Page>
         <div class="animate-fade-in">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-text sm:text-3xl">
+                <h2 class="text-2xl font-bold text-heading sm:text-3xl">
                     My Tasks
                 </h2>
                 <button
                     class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-accent"
+                    @click="openNewTask"
                 >
                     <Icon name="Plus" class="h-5 w-5 mr-2" /> Add Task
                 </button>
@@ -75,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- task list -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div v-if="filteredTasks.length === 0" class="p-8 text-center">
                     <Icon
@@ -110,11 +110,15 @@
                     :tasks="filteredTasks"
                     :current-user="currentUser"
                     :allow-drag="true"
-                    @edit="editTask"
-                    @delete="deleteTask"
+                    @edit="openEditTask"
                     @update:tasks="updated => store.tasks = updated"
+                    @toggle-status="toggleStatus"
                 />
             </div>
+            <TaskModal
+                v-model="showTaskModal"
+                :task-data="selectedTask"
+            />
         </div>
     </Page>
 </template>
@@ -123,14 +127,16 @@
     import Page from '@/components/Page.vue';
     import Icon from '@/components/Icon.vue';
     import TaskList from '@/components/TaskList.vue';
+    import TaskModal from '@/components/TaskModal.vue';
     import { storeToRefs } from 'pinia';
     import { useTaskStore } from '@/store/taskStore';
     import { ref, computed } from 'vue';
 
-    const store = useTaskStore();
-    const { tasks, currentUser } = storeToRefs(store);
+    const taskStore = useTaskStore();
+    const { tasks, currentUser } = storeToRefs(taskStore);
 
-    // filters
+    const showTaskModal = ref(false);
+    const selectedTask = ref(null);
     const searchTerm = ref('');
     const statusFilter = ref('all');
     const priorityFilter = ref('all');
@@ -144,10 +150,20 @@
         });
     });
 
-    const editTask = (task) => console.log('edit', task);
-    const deleteTask = (id) => {
-        if (confirm('Delete this task?')) {
-            store.tasks = store.tasks.filter(t => t.id !== id);
-        }
+    const openNewTask = () => {
+        selectedTask.value = null;
+        showTaskModal.value = true;
+    };
+
+    const openEditTask = (task) => {
+        selectedTask.value = task;
+        showTaskModal.value = true;
+    };
+
+    const toggleStatus = (task) => {
+        taskStore.updateTask({
+            ...task,
+            status: task.status === 'completed' ? 'pending' : 'completed'
+        });
     };
 </script>

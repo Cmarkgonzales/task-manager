@@ -3,34 +3,35 @@
 
 @theme {
     /* Core brand colors */
-    --color-primary: #2563eb;          /* Strong Blue - main CTA */
-    --color-primary-light: #93c5fd;    /* Soft Blue - backgrounds, hovers */
-    --color-primary-dark: #1e40af;     /* Deep Blue - active states */
+    --color-primary: #2563eb;           /* Strong blue */
+    --color-primary-light: #bfdbfe;     /* Lighter blue for hover */
+    --color-primary-dark: #1e40af;      /* Deep blue */
 
-    --color-accent: #0ea5e9;           /* Cyan - accent highlights, icons */
+    --color-accent: #184a99;            /* Cyan */
 
     /* Secondary neutrals */
-    --color-secondary: #e0f2fe;        /* Pale Blue - subtle highlights */
-    --color-bg: #f8fafc;               /* App background (very light slate) */
-    --color-bg-card: #ffffff;          /* Card, modal, and input background */
-    --color-surface: #f1f5f9;          /* Surface background layers */
+    --color-secondary: #e0f2fe;         /* Subtle highlights */
+    --color-bg: #f9fafb;                /* App background  */
+    --color-bg-card: #ffffff;           /* Card background */
+    --color-surface: #f3f4f6;           /* Surface background layers */
 
     /* Typography */
-    --color-text: #0f172a;             /* Primary text (dark slate) */
-    --color-text-light: #64748b;       /* Subtle/inactive text (gray slate) */
-    --color-heading: #1e293b;          /* For bold titles or section headings */
+    --color-text: #111827;              /* Dark slate */
+    --color-text-light: #475569;
+    --color-heading: #1e293b;
 
     /* Border/Divider */
-    --color-border: #e2e8f0;           /* Light slate border */
+    --color-border: #d1d5db;
 
     /* Priority/Status Feedback */
-    --color-success: #22c55e;          /* Green (low/completed) */
-    --color-warning: #facc15;          /* Yellow (medium/due soon) */
-    --color-danger: #ef4444;           /* Red (high/overdue/deletion) */
-    --color-info: #38bdf8;             /* Sky Blue (general info) */
-    --color-success-light: #dcfce7;
-    --color-warning-light: #fef9c2;
-    --color-danger-light: #ffe2e2;
+    --color-success: #22c55e;   /* classic green */
+    --color-warning: #eab308;   /* classic yellow-amber */
+    --color-danger:  #ef4444;   /* classic red */
+    --color-info: #0284c7;              /* Sky Blue */
+
+    --color-success-light: #d1fae5;     /* Green tint bg */
+    --color-warning-light: #fef3c7;     /* Amber tint bg */
+    --color-danger-light: #fee2e2;      /* Red tint bg */
 }
 
 @layer base {
