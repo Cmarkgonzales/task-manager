@@ -1,6 +1,5 @@
 <template>
     <div class="min-h-screen bg-bg flex flex-col">
-        <Navbar />
         <div class="flex justify-center px-4 pt-28 pb-6 overflow-y-auto">
             <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
                 <div class="relative mb-6">
@@ -50,7 +49,7 @@
                             icon="LockClosed"
                             placeholder="Enter password"
                             :type="showLoginPassword ? 'text' : 'password'"
-                            :show-toggle="true"
+                            :show-toggle="Boolean(loginForm.password)"
                             required
                             @toggle="showLoginPassword = !showLoginPassword"
                         />
@@ -87,7 +86,7 @@
                             icon="LockClosed"
                             placeholder="Enter password"
                             :type="showRegisterPassword ? 'text' : 'password'"
-                            :show-toggle="true"
+                            :show-toggle="Boolean(registerForm.password)"
                             required
                             @toggle="showRegisterPassword = !showRegisterPassword"
                             @input="checkPasswordStrength"
@@ -136,7 +135,6 @@
 <script setup>
     import { ref } from 'vue';
     import InputField from '@/components/InputField.vue';
-    import Navbar from '@/components/Navbar.vue';
 
     const authMode = ref('login');
     const showLoginPassword = ref(false);

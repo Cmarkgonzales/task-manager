@@ -2,36 +2,57 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Core brand colors */
-  --color-primary: #2563eb;          /* Strong Blue - main CTA */
-  --color-primary-light: #93c5fd;    /* Soft Blue - backgrounds, hovers */
-  --color-primary-dark: #1e40af;     /* Deep Blue - active states */
+    /* Core brand colors */
+    --color-primary: #2563eb;          /* Strong Blue - main CTA */
+    --color-primary-light: #93c5fd;    /* Soft Blue - backgrounds, hovers */
+    --color-primary-dark: #1e40af;     /* Deep Blue - active states */
 
-  --color-accent: #0ea5e9;           /* Cyan - accent highlights, icons */
+    --color-accent: #0ea5e9;           /* Cyan - accent highlights, icons */
 
-  /* Secondary neutrals */
-  --color-secondary: #e0f2fe;        /* Pale Blue - subtle highlights */
-  --color-bg: #f8fafc;               /* App background (very light slate) */
-  --color-bg-card: #ffffff;          /* Card, modal, and input background */
-  --color-surface: #f1f5f9;          /* Surface background layers */
+    /* Secondary neutrals */
+    --color-secondary: #e0f2fe;        /* Pale Blue - subtle highlights */
+    --color-bg: #f8fafc;               /* App background (very light slate) */
+    --color-bg-card: #ffffff;          /* Card, modal, and input background */
+    --color-surface: #f1f5f9;          /* Surface background layers */
 
-  /* Typography */
-  --color-text: #0f172a;             /* Primary text (dark slate) */
-  --color-text-light: #64748b;       /* Subtle/inactive text (gray slate) */
-  --color-heading: #1e293b;          /* For bold titles or section headings */
+    /* Typography */
+    --color-text: #0f172a;             /* Primary text (dark slate) */
+    --color-text-light: #64748b;       /* Subtle/inactive text (gray slate) */
+    --color-heading: #1e293b;          /* For bold titles or section headings */
 
-  /* Border/Divider */
-  --color-border: #e2e8f0;           /* Light slate border */
+    /* Border/Divider */
+    --color-border: #e2e8f0;           /* Light slate border */
 
-  /* Priority/Status Feedback */
-  --color-success: #22c55e;          /* Green (low/completed) */
-  --color-warning: #facc15;          /* Yellow (medium/due soon) */
-  --color-danger: #ef4444;           /* Red (high/overdue/deletion) */
-  --color-info: #38bdf8;             /* Sky Blue (general info) */
+    /* Priority/Status Feedback */
+    --color-success: #22c55e;          /* Green (low/completed) */
+    --color-warning: #facc15;          /* Yellow (medium/due soon) */
+    --color-danger: #ef4444;           /* Red (high/overdue/deletion) */
+    --color-info: #38bdf8;             /* Sky Blue (general info) */
+    --color-success-light: #dcfce7;
+    --color-warning-light: #fef9c2;
+    --color-danger-light: #ffe2e2;
 }
 
-
 @layer base {
+    :root {
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    }
     body {
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -40,6 +61,10 @@
 
     button {
         cursor: pointer;
+    }
+
+    nav {
+        transition: all 0.3s ease;
     }
 }
 
