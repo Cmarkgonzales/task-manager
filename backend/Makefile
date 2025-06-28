@@ -1,7 +1,9 @@
-# Variables
-ARTISAN  = docker compose exec app php artisan
-COMPOSER = docker compose exec app composer
-PHP      = docker compose exec app php
+UID     = $(shell id -u)
+GID     = $(shell id -g)
+ARTISAN  = docker compose exec -u $(UID):$(GID) app php artisan
+COMPOSER = docker compose exec -u $(UID):$(GID) app composer
+PHP      = docker compose exec -u $(UID):$(GID) app php
+MYSQL    = docker compose exec db mysql
 
 .PHONY: help up down build migrate fresh seed tinker artisan composer test
 
@@ -50,3 +52,12 @@ composer:
 
 test:
 	$(ARTISAN) test
+
+logs:
+	docker compose logs -f --tail=100
+
+fix-perms:
+	sudo chown -R $(shell id -u):$(shell id -g) .
+
+dbshell:
+	$(MYSQL) -u laravel -p

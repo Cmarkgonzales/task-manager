@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    user: "${UID}:${GID}"
     image: task-manager-app
     container_name: task-manager-app
     restart: unless-stopped

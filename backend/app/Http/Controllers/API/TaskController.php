@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Models\Task;
+use App\Http\Requests\TaskRequest;
+use App\Http\Resources\TaskResource;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Requests\ReorderTasksRequest;
+use Illuminate\Support\Facades\DB;
+
+
+class TaskController extends Controller
+{
+    public function index(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $tasks = Cache::remember("tasks_user_{$userId}", 60, function () use ($request, $userId) {
+            return Task::where('user_id', $userId)
+                ->when($request->status, fn($q) => $q->status($request->status))
+                ->when($request->priority, fn($q) => $q->priority($request->priority))
+                ->orderBy('order')
+                ->get();
+        });
+
+        return TaskResource::collection($tasks);
+    }
+
+    public function store(TaskRequest $request)
+    {
+        $user = $request->user();
+        $nextOrder = Task::where('user_id', $user->id)->max('order') + 1;
+        $task = Task::create(array_merge(
+            $request->validated(),
+            [
+                'user_id' => $request->user()->id,
+                'order'   => $nextOrder,
+            ]
+        ));
+
+        Cache::forget("tasks_user_{$request->user()->id}");
+
+        return new TaskResource($task);
+    }
+
+    public function show(Task $task)
+    {
+        $this->authorize('view', $task);
+
+        return new TaskResource($task);
+    }
+
+    public function update(TaskRequest $request, Task $task)
+    {
+        $this->authorize('update', $task);
+
+        $task->update($request->validated());
+
+        Cache::forget("tasks_user_{$request->user()->id}");
+
+        return new TaskResource($task);
+    }
+
+    public function destroy(Task $task)
+    {
+        $this->authorize('delete', $task);
+
+        $task->delete();
+
+        Cache::forget("tasks_user_{$task->user_id}");
+
+        return response()->json(['message' => 'Task deleted']);
+    }
+
+    public function reorder(ReorderTasksRequest $request)
+    {
+        $user = $request->user();
+        $taskIds = $request->ordered_ids;
+
+        // Fetch only the user's tasks to avoid updating others'
+        $tasks = Task::where('user_id', $user->id)
+            ->whereIn('id', $taskIds)
+            ->get()
+            ->keyBy('id');
+
+        if ($tasks->count() !== count($taskIds)) {
+            return response()->json([
+                'error' => 'Some tasks do not belong to the authenticated user or do not exist.'
+            ], 403);
+        }
+
+        // Transaction ensures consistency
+        DB::transaction(function () use ($taskIds, $user) {
+            foreach ($taskIds as $index => $id) {
+                Task::where('id', $id)
+                    ->where('user_id', $user->id)
+                    ->update(['order' => $index]);
+            }
+        });
+
+        Cache::forget("tasks_user_{$user->id}");
+
+        return response()->json(['message' => 'Tasks reordered successfully']);
+    }
+}
