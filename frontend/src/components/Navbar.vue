@@ -13,7 +13,7 @@
 
                 <div v-if="isAuthenticated" class="hidden md:flex items-center space-x-6">
                     <RouterLink
-                        v-for="link in navLinks"
+                        v-for="link in validNavLinks"
                         :key="link.name"
                         :to="link.path"
                         class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
@@ -110,6 +110,14 @@
     const userInitial = computed(() => authStore.userInitial);
     const isAuthenticated = computed(() => authStore.isAuthenticated);
     const userName = computed(() => authStore.userName);
+    const validNavLinks = computed(() => {
+        const { isUserAdmin } = authStore;
+
+        // Hide admin tab for non admin users
+        return isUserAdmin
+            ? navLinks
+            : navLinks.filter(link => link.name !== 'Admin');
+    });
 
     const toggleUserMenu = () => {
         showUserMenu.value = !showUserMenu.value;
