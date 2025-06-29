@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.admin' => \App\Http\Middleware\CheckAdmin::class,
         ]);
     })
+    ->withProviders([
+        App\Providers\BroadcastServiceProvider::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

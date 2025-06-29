@@ -42,7 +42,7 @@ seed:
 	$(ARTISAN) db:seed
 
 tinker:
-	$(ARTISAN) tinker
+	docker compose exec -e HOME=/tmp -u 1000:1000 app php artisan tinker
 
 artisan:
 	$(ARTISAN) $(ARGS)

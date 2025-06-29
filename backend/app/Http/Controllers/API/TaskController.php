@@ -9,11 +9,13 @@ use App\Http\Resources\TaskResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\ReorderTasksRequest;
+use App\Events\TaskCreated;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TaskController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
         $userId = $request->user()->id;
@@ -23,6 +25,12 @@ class TaskController extends Controller
                 ->where('user_id', $userId)
                 ->when($request->status, fn($q) => $q->status($request->status))
                 ->when($request->priority, fn($q) => $q->priority($request->priority))
+                ->when($request->search, fn($q) =>
+                    $q->where(function ($query) use ($request) {
+                        $query->where('title', 'like', "%{$request->search}%")
+                            ->orWhere('description', 'like', "%{$request->search}%");
+                    })
+                )
                 ->orderBy('order')
                 ->get();
         });
@@ -43,6 +51,9 @@ class TaskController extends Controller
         ));
 
         Cache::forget("tasks_user_{$request->user()->id}");
+
+        // Fire the broadcast event
+        broadcast(new TaskCreated($task))->toOthers();
 
         return new TaskResource($task);
     }
@@ -105,5 +116,40 @@ class TaskController extends Controller
         Cache::forget("tasks_user_{$user->id}");
 
         return response()->json(['message' => 'Tasks reordered successfully']);
+    }
+
+    public function updateStatus(Request $request, Task $task)
+    {
+        $this->authorize('update', $task);
+
+        // If status is explicitly provided, validate it
+        if ($request->has('status')) {
+            $validated = $request->validate([
+                'status' => 'required|in:pending,completed',
+            ]);
+
+            $task->update(['status' => $validated['status']]);
+        } else {
+            // Otherwise, toggle status
+            $newStatus = $task->status === 'completed' ? 'pending' : 'completed';
+            $task->update(['status' => $newStatus]);
+        }
+
+        Cache::forget("tasks_user_{$task->user_id}");
+
+        return new TaskResource($task);
+    }
+
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+
+        $tasks = Task::withoutTrashed()->where('user_id', $user->id);
+
+        return response()->json([
+            'total' => $tasks->count(),
+            'completed' => $tasks->where('status', 'completed')->count(),
+            'pending' => $tasks->where('status', 'pending')->count(),
+        ]);
     }
 }

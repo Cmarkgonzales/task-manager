@@ -21,8 +21,8 @@ class AdminController extends Controller
             return response()->json(['message' => 'Invalid sort_by parameter'], 422);
         }
 
-        // Base query with eager loading of active tasks only
-        $query = User::with(['tasks' => function ($q) {
+        // Base query: only non-admin users, eager load non-deleted tasks
+        $query = User::where('is_admin', false)->with(['tasks' => function ($q) {
             $q->withoutTrashed();
         }]);
 
