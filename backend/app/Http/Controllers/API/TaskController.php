@@ -144,12 +144,12 @@ class TaskController extends Controller
     {
         $user = $request->user();
 
-        $tasks = Task::withoutTrashed()->where('user_id', $user->id);
+        $baseQuery = Task::withoutTrashed()->where('user_id', $user->id);
 
         return response()->json([
-            'total' => $tasks->count(),
-            'completed' => $tasks->where('status', 'completed')->count(),
-            'pending' => $tasks->where('status', 'pending')->count(),
+            'total'     => $baseQuery->count(),
+            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
+            'pending'   => (clone $baseQuery)->where('status', 'pending')->count(),
         ]);
     }
 }

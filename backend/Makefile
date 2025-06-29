@@ -19,7 +19,7 @@ help:
 	@echo "  make tinker              -- Launch Laravel Tinker"
 	@echo "  make artisan ARGS='...'  -- Run any artisan command (ex: make artisan ARGS='route:list')"
 	@echo "  make composer ARGS='...' -- Run composer command (ex: make composer ARGS='install')"
-	@echo "  make test                -- Run PHPUnit tests"
+	@echo "  make test  ARGS='...'    -- Run PHPUnit tests"
 
 # Docker Compose
 up:
@@ -51,7 +51,7 @@ composer:
 	$(COMPOSER) $(ARGS)
 
 test:
-	$(ARTISAN) test
+	$(ARTISAN) test $(ARGS)
 
 logs:
 	docker compose logs -f --tail=100
