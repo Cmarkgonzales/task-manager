@@ -19,7 +19,8 @@ class TaskController extends Controller
         $userId = $request->user()->id;
 
         $tasks = Cache::remember("tasks_user_{$userId}", 60, function () use ($request, $userId) {
-            return Task::where('user_id', $userId)
+            return Task::withoutTrashed()
+                ->where('user_id', $userId)
                 ->when($request->status, fn($q) => $q->status($request->status))
                 ->when($request->priority, fn($q) => $q->priority($request->priority))
                 ->orderBy('order')

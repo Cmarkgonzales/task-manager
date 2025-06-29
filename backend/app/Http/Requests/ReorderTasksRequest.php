@@ -8,7 +8,6 @@ class ReorderTasksRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Add authorization logic if needed per-user or admin
         return true;
     }
 
