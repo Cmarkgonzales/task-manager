@@ -46,7 +46,7 @@
                             <input
                                 :id="`task-${task.id}`"
                                 :disabled="isAdminPage"
-                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
                                 type="checkbox"
                                 :checked="task.status === 'completed'"
                                 @change="onToggleStatus(task)"
@@ -63,18 +63,11 @@
                                 </label>
                                 <div class="flex items-center mt-2 space-x-2">
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        :class="{
-                                            'bg-success-light text-green-800': task.priority === 'Low',
-                                            'bg-warning-light text-yellow-800': task.priority === 'Medium',
-                                            'bg-danger-light text-red-800': task.priority === 'High'
-                                        }"
+                                        class="flex items-center text-xs text-text-light"
+                                        :class="dueDateColorMap[formatDueDate(task.due_date).color]"
                                     >
-                                        {{ task.priority }}
-                                    </span>
-                                    <span class="flex items-center text-xs text-text-light">
                                         <Icon name="Calendar" class="h-4 w-4 mr-1" />
-                                        {{ formatDueDate(task.dueDate) }}
+                                        {{ formatDueDate(task.due_date).label }}
                                     </span>
                                 </div>
                             </div>
@@ -90,6 +83,7 @@
                                 <Icon name="PencilSquare" />
                             </button>
                             <button
+                                v-if="authStore.isUserAdmin"
                                 class="text-text-light hover:text-danger"
                                 @click="askDelete(task.id)"
                             >
@@ -115,6 +109,7 @@
     import { defineProps, defineEmits, ref, computed, watch } from 'vue';
     import { useRoute } from 'vue-router';
     import { useTaskStore } from '@/store/taskStore';
+    import { useAuthStore } from '@/store/authStore';
 
     const props = defineProps({
         tasks: { type: Array, required: true },
@@ -127,13 +122,14 @@
     const taskToDeleteId = ref(null);
 
     const route = useRoute();
-    const store = useTaskStore();
+    const taskStore = useTaskStore();
+    const authStore = useAuthStore();
 
     const isAdminPage = computed(() => route.name === 'admin');
 
     const confirmDelete = () => {
         if (taskToDeleteId.value !== null) {
-            store.deleteTask(taskToDeleteId.value);
+            taskStore.deleteTask(taskToDeleteId.value);
             localTasks.value = localTasks.value.filter(task => task.id !== taskToDeleteId.value);
             emit('update:tasks', localTasks.value);
             taskToDeleteId.value = null;
@@ -169,36 +165,65 @@
 
     const getBorderClass = (priority) => {
         switch (priority) {
-        case 'High': return 'border-l-danger';
-        case 'Medium': return 'border-l-warning';
-        case 'Low': return 'border-l-success';
+        case 'high': return 'border-l-danger';
+        case 'medium': return 'border-l-warning';
+        case 'low': return 'border-l-success';
         default: return '';
         }
     };
 
+    const dueDateColorMap = {
+        danger: 'text-danger',
+        warning: 'text-warning',
+        success: 'text-success',
+        gray: 'text-secondary'
+    };
+
     const formatDueDate = (dateString) => {
+        if (!dateString) return { label: 'No due date', color: 'danger' };
+
         const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, {
+        const now = new Date();
+        const diffMs = date - now;
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+        const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+
+        let relative;
+        if (diffDays === 0) {
+            relative = 'Today';
+        } else {
+            relative = rtf.format(diffDays, 'day');
+        }
+
+        const formatted = date.toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
+
+        let color;
+        if (diffDays < 0) {
+            color = 'danger'; // past due
+        } else if (diffDays === 0) {
+            color = 'warning'; // due today
+        } else {
+            color = 'success'; // upcoming
+        }
+
+        return {
+            label: `${formatted} (${relative})`,
+            color
+        };
     };
 </script>
 
 <style scoped>
-    .task-item {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .task-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    }
-
     .fade-enter-active,
     .fade-leave-active {
         transition: opacity 0.2s ease;
     }
+
     .fade-enter-from,
     .fade-leave-to {
         opacity: 0;

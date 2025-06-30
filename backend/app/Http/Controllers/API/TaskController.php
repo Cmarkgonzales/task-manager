@@ -19,8 +19,13 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $userId = $request->user()->id;
+        $search = $request->search ?? '';
+        $status = $request->status ?? '';
+        $priority = $request->priority ?? '';
 
-        $tasks = Cache::remember("tasks_user_{$userId}", 60, function () use ($request, $userId) {
+        $cacheKey = "tasks_user_{$userId}_search_{$search}_status_{$status}_priority_{$priority}";
+
+        $tasks = Cache::remember($cacheKey, 60, function () use ($request, $userId) {
             return Task::withoutTrashed()
                 ->where('user_id', $userId)
                 ->when($request->status, fn($q) => $q->status($request->status))

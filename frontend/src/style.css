@@ -78,4 +78,13 @@
     .btn-primary {
         @apply mt-4 py-2.5 px-4 text-sm sm:text-base font-medium text-white bg-accent hover:bg-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-colors duration-200 ease-in-out;
     }
+
+    .task-item {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .task-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    }
 }

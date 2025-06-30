@@ -12,6 +12,7 @@
                     <Icon name="Plus" class="h-5 w-5 mr-2" /> Add Task
                 </button>
             </div>
+
             <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                     <div class="relative w-full">
@@ -24,13 +25,12 @@
                             id="search-input"
                             v-model="searchTerm"
                             type="text"
-                            class="w-full pl-10 pr-10 py-2 border border-border rounded-md focus:ring-primary focus:border-primary text-sm"
+                            class="w-full pl-10 pr-10 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary text-sm"
                             placeholder="Search tasks..."
                         />
-
                         <button
                             v-if="searchTerm"
-                            class="absolute top-1/2 right-2 transform -translate-y-1/2 text-text-light hover:text-text"
+                            class="absolute top-1/2 right-4 transform -translate-y-1/2 text-text-light hover:text-text"
                             @click="searchTerm = ''"
                         >
                             <Icon
@@ -40,10 +40,11 @@
                             />
                         </button>
                     </div>
-                    <div class="flex gap-4 w-full md:w-auto">
-                        <div>
-                            <label class="text-sm font-medium text-text mb-1 block">Status</label>
-                            <select v-model="statusFilter" class="w-full md:w-44 px-3 py-2 border rounded-md focus:ring-primary">
+
+                    <div class="flex flex-col sm:flex-row sm:items-end gap-4 w-full md:w-auto">
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-text mb-1">Status</label>
+                            <select v-model="statusFilter" class="w-full md:w-44 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light">
                                 <option value="all">
                                     All
                                 </option>
@@ -55,9 +56,9 @@
                                 </option>
                             </select>
                         </div>
-                        <div>
-                            <label class="text-sm font-medium text-text mb-1 block">Priority</label>
-                            <select v-model="priorityFilter" class="w-full md:w-44 px-3 py-2 border rounded-md focus:ring-primary">
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-text mb-1">Priority</label>
+                            <select v-model="priorityFilter" class="w-full md:w-44 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light">
                                 <option value="all">
                                     All
                                 </option>
@@ -72,12 +73,22 @@
                                 </option>
                             </select>
                         </div>
+                        <button
+                            v-if="hasActiveFilters"
+                            class="sm:self-end px-3 py-2 rounded-md border border-border text-sm hover:bg-primary-light"
+                            @click="clearAllFilters"
+                        >
+                            Clear All
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div v-if="filteredTasks.length === 0" class="p-8 text-center">
+                <ul v-if="isFetchingTasks">
+                    <BaseLoading v-for="i in 3" :key="i" />
+                </ul>
+                <div v-else-if="!tasks.length" class="p-8 text-center">
                     <Icon
                         name="Clipboard"
                         variant="outline"
@@ -107,15 +118,15 @@
                 </div>
                 <TaskList
                     v-else
-                    :tasks="filteredTasks"
+                    :tasks="tasks"
                     :allow-drag="true"
                     @edit="openEditTask"
                     @update:tasks="updated => store.tasks = updated"
                     @toggle-status="toggleStatus"
                 />
             </div>
-            <TaskModal
-                v-model="showTaskModal"
+            <TaskPanel
+                v-model="showTaskPanel"
                 :task-data="selectedTask"
             />
         </div>
@@ -123,57 +134,69 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, computed } from 'vue';
+    import { onMounted, ref, computed, watch } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useTaskStore } from '@/store/taskStore';
-    // import { useAuthStore } from '../store/authStore';
 
     import Page from '@/components/Page.vue';
     import Icon from '@/components/Icon.vue';
     import TaskList from '@/components/TaskList.vue';
-    import TaskModal from '@/components/TaskModal.vue';
+    import TaskPanel from '@/components/TaskPanel.vue';
+    import BaseLoading from '@/components/BaseLoading.vue';
 
-    // Init store and refs
     const taskStore = useTaskStore();
-    // const authStore = useAuthStore();
-    const { tasks } = storeToRefs(taskStore); // Removed currentUser — not in taskStore
+    const { tasks, isFetchingTasks } = storeToRefs(taskStore);
 
-    // Load tasks from backend on page load
     onMounted(async () => {
         await taskStore.fetchTasks();
     });
 
-    // Task modal state
-    const showTaskModal = ref(false);
+    const showTaskPanel = ref(false);
     const selectedTask = ref(null);
 
-    // Filters
     const searchTerm = ref('');
     const statusFilter = ref('all');
     const priorityFilter = ref('all');
 
-    // Filtered task list
-    const filteredTasks = computed(() => {
-        return tasks.value.filter(task => {
-            const matchTitle = task.title.toLowerCase().includes(searchTerm.value.toLowerCase());
-            const matchStatus = statusFilter.value === 'all' || task.status === statusFilter.value;
-            const matchPriority = priorityFilter.value === 'all' || task.priority === priorityFilter.value;
-            return matchTitle && matchStatus && matchPriority;
-        });
+    // computed to check if anything is active
+    const hasActiveFilters = computed(() => {
+        return (
+            searchTerm.value.trim() ||
+            statusFilter.value !== 'all' ||
+            priorityFilter.value !== 'all'
+        );
     });
 
-    // Modal triggers
+    // clear all filters
+    const clearAllFilters = () => {
+        searchTerm.value = '';
+        statusFilter.value = 'all';
+        priorityFilter.value = 'all';
+    };
+
+    watch([searchTerm, statusFilter, priorityFilter], () => {
+        fetchFilteredTasks();
+    });
+
+    const fetchFilteredTasks = async () => {
+        const params = {
+            search: searchTerm.value || undefined,
+            status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+            priority: priorityFilter.value !== 'all' ? priorityFilter.value : undefined,
+        };
+        await taskStore.fetchTasks(params);
+    };
+
     const openNewTask = () => {
         selectedTask.value = null;
-        showTaskModal.value = true;
+        showTaskPanel.value = true;
     };
 
     const openEditTask = (task) => {
         selectedTask.value = task;
-        showTaskModal.value = true;
+        showTaskPanel.value = true;
     };
 
-    // Toggle task status using API
     const toggleStatus = async (task) => {
         await taskStore.toggleTaskStatus(task.id);
     };
