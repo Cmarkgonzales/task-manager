@@ -108,7 +108,6 @@
                 <TaskList
                     v-else
                     :tasks="filteredTasks"
-                    :current-user="currentUser"
                     :allow-drag="true"
                     @edit="openEditTask"
                     @update:tasks="updated => store.tasks = updated"
@@ -124,23 +123,36 @@
 </template>
 
 <script setup>
+    import { onMounted, ref, computed } from 'vue';
+    import { storeToRefs } from 'pinia';
+    import { useTaskStore } from '@/store/taskStore';
+    // import { useAuthStore } from '../store/authStore';
+
     import Page from '@/components/Page.vue';
     import Icon from '@/components/Icon.vue';
     import TaskList from '@/components/TaskList.vue';
     import TaskModal from '@/components/TaskModal.vue';
-    import { storeToRefs } from 'pinia';
-    import { useTaskStore } from '@/store/taskStore';
-    import { ref, computed } from 'vue';
 
+    // Init store and refs
     const taskStore = useTaskStore();
-    const { tasks, currentUser } = storeToRefs(taskStore);
+    // const authStore = useAuthStore();
+    const { tasks } = storeToRefs(taskStore); // Removed currentUser — not in taskStore
 
+    // Load tasks from backend on page load
+    onMounted(async () => {
+        await taskStore.fetchTasks();
+    });
+
+    // Task modal state
     const showTaskModal = ref(false);
     const selectedTask = ref(null);
+
+    // Filters
     const searchTerm = ref('');
     const statusFilter = ref('all');
     const priorityFilter = ref('all');
 
+    // Filtered task list
     const filteredTasks = computed(() => {
         return tasks.value.filter(task => {
             const matchTitle = task.title.toLowerCase().includes(searchTerm.value.toLowerCase());
@@ -150,6 +162,7 @@
         });
     });
 
+    // Modal triggers
     const openNewTask = () => {
         selectedTask.value = null;
         showTaskModal.value = true;
@@ -160,10 +173,8 @@
         showTaskModal.value = true;
     };
 
-    const toggleStatus = (task) => {
-        taskStore.updateTask({
-            ...task,
-            status: task.status === 'completed' ? 'pending' : 'completed'
-        });
+    // Toggle task status using API
+    const toggleStatus = async (task) => {
+        await taskStore.toggleTaskStatus(task.id);
     };
 </script>

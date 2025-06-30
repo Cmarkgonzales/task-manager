@@ -22,34 +22,49 @@ class AuthController extends Controller
             'is_admin' => $request->boolean('is_admin'),
         ]);
 
-        return new UserResource($user);
+        return response()->json($user);
     }
 
     public function login(LoginRequest $request)
     {
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! $user) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['We could not find a user with that email.'],
             ]);
         }
 
+        if (! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The password you entered is incorrect.'],
+            ]);
+        }
+
+        auth()->login($user);
+        $request->session()->regenerate();
+
         return response()->json([
-            'token' => $user->createToken('auth_token')->plainTextToken,
-            'user'  => new UserResource($user),
+            'user' => new UserResource($user),
         ]);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logged out']);
+        // explicitly forget the cookie
+        $cookieName = config('session.cookie');
+
+        return response()
+            ->json(['message' => 'Logged out'])
+            ->withCookie(cookie()->forget($cookieName));
     }
 
     public function me(Request $request)
     {
-        return new UserResource($request->user());
+        return response()->json($request->user());
     }
 }

@@ -1,93 +1,100 @@
 import { defineStore } from 'pinia';
+import api from '@/lib/axios';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
-        token: null,
-        // temporary fake users
-        fakeUsers: [
-            {
-                id: 1,
-                name: 'Chris Chan',
-                email: 'chris@test.com',
-                password: 'password',
-                role: 'admin',
-                active: true,
-                tasks: [1, 2]
-            },
-            {
-                id: 2,
-                name: 'Mark',
-                email: 'mark@test.com',
-                password: 'password',
-                role: 'user',
-                active: true,
-                tasks: [3]
-            },
-        ],
+        isAuthenticating: false
     }),
 
     getters: {
         isAuthenticated: (state) => !!state.user,
         userName: (state) => state.user?.name || '',
         userInitial: (state) => state.user?.name?.charAt(0).toUpperCase() || '',
-        isUserAdmin: (state) => state.user?.role === 'admin'
+        isUserAdmin: (state) => state.user?.is_admin,
     },
 
     actions: {
-        login(email, password) {
-            const foundUser = this.fakeUsers.find(
-                (u) => u.email === email && u.password === password
-            );
+        async getCsrf() {
+            await api.get('/sanctum/csrf-cookie');
+        },
 
-            if (foundUser) {
-                this.user = foundUser;
-                this.token = 'fake-token';
-                localStorage.setItem('authUser', JSON.stringify(foundUser));
-                localStorage.setItem('authToken', this.token);
+        async login(email, password) {
+            try {
+                this.isAuthenticating = true;
+                await this.getCsrf();
+                const response = await api.post('/api/login', { email, password });
+
+                this.user = response.data.user;
+
                 return { success: true };
-            } else {
-                return { success: false, message: 'Invalid email or password' };
+            } catch (error) {
+                const response = error.response;
+                return {
+                    success: false,
+                    message: response?.data?.message || 'Login failed.',
+                    errors: response?.data?.errors || {},
+                };
+            } finally {
+                this.isAuthenticating = false;
             }
         },
 
-        register(name, email, password) {
-            const exists = this.fakeUsers.find(u => u.email === email);
+        async register(name, email, password, password_confirmation, is_admin=false) {
+            try {
+                this.isAuthenticating = true;
+                await this.getCsrf();
+                await api.post('/api/register', { name, email, password, password_confirmation, is_admin });
 
-            if (exists) {
-                return { success: false, message: 'Email already registered' };
-            }
-
-            const newUser = {
-                id: this.fakeUsers.length + 1,
-                name,
-                email,
-                password,
-                role: 'user'
-            };
-
-            this.fakeUsers.push(newUser);
-            this.user = newUser;
-            this.token = 'fake-token';
-            localStorage.setItem('authUser', JSON.stringify(newUser));
-            localStorage.setItem('authToken', this.token);
-            return { success: true };
-        },
-
-        logout() {
-            this.user = null;
-            this.token = null;
-            localStorage.removeItem('authUser');
-            localStorage.removeItem('authToken');
-        },
-
-        hydrate() {
-            const savedUser = localStorage.getItem('authUser');
-            const savedToken = localStorage.getItem('authToken');
-            if (savedUser && savedToken) {
-                this.user = JSON.parse(savedUser);
-                this.token = savedToken;
+                // automatically login after register
+                return await this.login(email, password);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: error.response?.data?.message || 'Registration failed',
+                };
+            } finally {
+                this.isAuthenticating = false;
             }
         },
-    }
+
+        async fetchUser() {
+            try {
+                const response = await api.get('/api/me');
+                this.user = response.data;
+            } catch {
+                this.user = null;
+            }
+        },
+
+        async logout() {
+            try {
+                await this.getCsrf();
+                await api.post('/api/logout');
+            } catch (error) {
+                console.error('Logout request failed:', error);
+            } finally {
+                this.user = null;
+
+                // clear all cookies on the client
+                document.cookie = 'laravel_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+                window.location.href = '/auth';
+            }
+        },
+
+        async hydrate() {
+            if (this.isAuthenticating) return;
+            this.isAuthenticating = true;
+
+            try {
+                await this.fetchUser();
+            } catch {
+                this.user = null;
+            } finally {
+                this.isAuthenticating = false;
+            }
+        }
+    },
 });

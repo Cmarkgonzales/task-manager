@@ -14,48 +14,56 @@ const routes = [
         path: '/dashboard',
         component: Dashboard,
         name: 'dashboard',
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true },
     },
     {
         path: '/statistics',
         component: Stats,
         name: 'statistics',
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true },
     },
     {
         path: '/admin',
         component: Admin,
         name: 'admin',
-        meta: { requiresAuth: true, requiresAdmin: true }
+        meta: { requiresAuth: true, requiresAdmin: true },
     },
-    { path: '/:pathMatch(.*)*', component: NotFound, name: 'notfound' }
+    { path: '/:pathMatch(.*)*', component: NotFound, name: 'notfound' },
 ];
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
 });
 
-router.beforeEach((to, from, next) => {
-    const store = useAuthStore();
+let isHydrated = false;
 
-    store.hydrate();
+router.beforeEach(async (to, from, next) => {
+    const auth = useAuthStore();
 
-    const isAuth = store.isAuthenticated;
+    if (!isHydrated && to.path !== '/auth') {
+        await auth.hydrate();
+        isHydrated = true;
+    }
 
-    if (isAuth && (to.path === '/auth' || to.path === '/')) {
+    const isAuth = auth.isAuthenticated;
+
+    // Redirect authenticated users away from login page
+    if (isAuth && to.path === '/auth') {
         return next('/dashboard');
     }
 
+    // Block unauthenticated access to protected routes
     if (to.meta.requiresAuth && !isAuth) {
         return next('/auth');
     }
 
-    if (to.meta.requiresAdmin && store.user?.role !== 'admin') {
+    // Block non-admin access to admin routes
+    if (to.meta.requiresAdmin && !auth.user?.is_admin) {
         return next('/dashboard');
     }
 
-    next();
+    return next();
 });
 
 export default router;

@@ -11,7 +11,7 @@
                     <span class="text-xl font-bold text-accent">TaskManager</span>
                 </RouterLink>
 
-                <div v-if="isAuthenticated" class="hidden md:flex items-center space-x-6">
+                <div v-if="isAuthenticated && !isAuthenticating" class="hidden md:flex items-center space-x-6">
                     <RouterLink
                         v-for="link in validNavLinks"
                         :key="link.name"
@@ -19,7 +19,7 @@
                         class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
                         :class="isActive(link.path)
                             ? 'bg-accent/10 text-accent font-semibold backdrop-blur-sm'
-                            : 'text-text-light hover:text-text hover:bg-border hover:backdrop-blur-sm transition'"
+                            : 'text-text-light hover:text-accent hover:bg-accent/10 hover:backdrop-blur-sm transition'"
                     >
                         {{ link.name }}
                     </RouterLink>
@@ -89,13 +89,13 @@
 
 <script setup>
     import { ref, computed } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+    import { useRoute } from 'vue-router';
     import { useAuthStore } from '@/store/authStore';
     import Icon from './Icon.vue';
 
     const authStore = useAuthStore();
     const route = useRoute();
-    const router = useRouter();
+
 
     const navLinks = [
         { name: 'My Tasks', path: '/dashboard' },
@@ -109,6 +109,7 @@
 
     const userInitial = computed(() => authStore.userInitial);
     const isAuthenticated = computed(() => authStore.isAuthenticated);
+    const isAuthenticating = computed(() => authStore.isAuthenticating);
     const userName = computed(() => authStore.userName);
     const validNavLinks = computed(() => {
         const { isUserAdmin } = authStore;
@@ -131,10 +132,9 @@
         showUserMenu.value = false;
     };
 
-    const logout = () => {
-        authStore.logout();
+    const logout = async () => {
+        await authStore.logout();
         showUserMenu.value = false;
-        router.push('/auth');
     };
 </script>
 
